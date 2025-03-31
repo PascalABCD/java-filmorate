@@ -31,9 +31,7 @@ public class UserController {
         user.setId(id++);
 
         // если нет имени, используем логин
-        if (user.isNameBlank()) {
-            user.setName(user.getLogin());
-        }
+        user.setDefaultName();
 
         users.put(user.getId(), user);
         log.info("Юзер создан: {}", user);
@@ -50,6 +48,7 @@ public class UserController {
             throw new NotFoundException("Юзен не найден");
         }
 
+        user.setDefaultName();
         users.put(id, user);
         log.info("Данные юзера обновлены: {}", user);
         return user;

@@ -10,7 +10,7 @@ public class ReleaseDateValidator implements ConstraintValidator<ReleaseDate, Lo
 
     @Override
     public boolean isValid(LocalDate date, ConstraintValidatorContext context) {
-        return date == null || !date.isBefore(MIN_RELEASE_DATE);
+        return date != null && date.isAfter(MIN_RELEASE_DATE);
     }
 }
 

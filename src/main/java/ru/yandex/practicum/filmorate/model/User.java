@@ -11,6 +11,7 @@ public class User {
     private Long id;
 
     @Email(message = "Email не корректен")
+    @NotNull(message = "Поле email не может быть пустым")
     private String email;
 
     @NotBlank(message = "Поле логин не может быть пустым")
@@ -19,12 +20,14 @@ public class User {
 
     private String name;
 
-    @Past(message = "Дата рождения не может быть в будущем")
     @JsonFormat(pattern = "yyyy-MM-dd")
+    @NotNull(message = "Поле для даты рождения не может быть пустым")
+    @Past(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
 
-    // нужно, чтобы засетить логин как имя, когда имя не указано
-    public boolean isNameBlank() {
-        return name == null || name.isBlank();
+    public void setDefaultName() {
+        if (name == null || name.isBlank()) {
+            name = login;
+        }
     }
 }
