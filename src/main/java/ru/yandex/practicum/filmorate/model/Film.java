@@ -30,5 +30,5 @@ public class Film {
     @Positive
     int duration;
 
-    private Set<User> likes = new HashSet<>();
+    private Set<Long> likes = new HashSet<>();
 }
