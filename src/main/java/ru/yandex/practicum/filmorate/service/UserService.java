@@ -86,7 +86,7 @@ public class UserService {
                 .findFirst()
                 .orElseThrow(() -> {
                     log.error("Пользователь не найден");
-                    return new NotFoundException ("Пользователь-друг не найден");
+                    return new NotFoundException("Пользователь-друг не найден");
                 });
 
         log.info("Пользователь {} удален из друзей к пользователю {}", friendId, userId);
@@ -103,7 +103,7 @@ public class UserService {
                 .findFirst()
                 .orElseThrow(() -> {
                     log.error("Пользователь не найден");
-                    return  new NotFoundException("Пользователь не найден");
+                    return new NotFoundException("Пользователь не найден");
                 });
         log.info("Пользователь {} найден", userId);
         return storage.getAll().stream()
@@ -117,7 +117,7 @@ public class UserService {
                 .findFirst()
                 .orElseThrow(() -> {
                     log.error("Пользователь не найден");
-                    return  new NotFoundException("Пользователь не найден");
+                    return new NotFoundException("Пользователь не найден");
                 });
         User other = storage.getAll().stream()
                 .filter(us -> Objects.equals(us.getId(), otherId))
