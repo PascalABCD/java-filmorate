@@ -15,8 +15,7 @@ import ru.yandex.practicum.filmorate.model.ErrorResponse;
         FilmController.class,
         UserController.class})
 @RestControllerAdvice
-public class ErrorHandler{
-
+public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFoundException(final NotFoundException e) {
@@ -43,7 +42,4 @@ public class ErrorHandler{
                 e.getMessage()
         );
     }
-
-    
-    
 }
