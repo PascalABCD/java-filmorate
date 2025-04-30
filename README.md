@@ -1,13 +1,13 @@
 # java-filmorate
 Template repository for Filmorate project.
 
-![Data Base scheme](filmorate_db_scheme.png)
+![Data Base scheme](filmorate.png)
 
 Получить всех друзей пользователя:
 ``` sql
 SELECT followed_user_id 
 FROM friends
-WHERE user_id = 1 AND status = 'FRIEND';
+WHERE user_id = 1;
 ```
 
 Получить топ-5 самых популярных фильмов (по количеству лайков):

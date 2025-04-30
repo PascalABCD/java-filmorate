@@ -29,8 +29,6 @@ public class User {
 
     private Set<Long> friends = new HashSet<>();
 
-    FriendshipStatus friendshipStatus = FriendshipStatus.NOT_FRIEND;
-
     public void setDefaultName() {
         if (name == null || name.isBlank()) {
             name = login;

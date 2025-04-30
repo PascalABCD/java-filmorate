@@ -31,7 +31,7 @@ public class Film {
     @Positive
     int duration;
 
-    List<String> genre;
+    List<Genre> genres;
 
     MpaRating mpaRating;
 
