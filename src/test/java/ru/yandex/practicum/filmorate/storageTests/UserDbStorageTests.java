@@ -43,6 +43,7 @@ public class UserDbStorageTests {
     void clear() {
         jdbcTemplate.update("DELETE FROM friends");
         jdbcTemplate.update("DELETE FROM users");
+        jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
     }
 
     @Test
