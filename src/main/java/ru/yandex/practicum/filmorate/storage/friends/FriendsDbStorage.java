@@ -74,7 +74,7 @@ public class FriendsDbStorage implements FriendsStorage {
 
     private void checkIfExists(long userId) {
         String sql = """
-                SELECT 1
+                SELECT *
                 FROM users
                 WHERE user_id = ?
                 """;
