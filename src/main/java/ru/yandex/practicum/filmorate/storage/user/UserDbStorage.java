@@ -57,7 +57,7 @@ public class UserDbStorage extends BaseStorage<User> implements UserStorage {
 
     @Override
     public List<User> getAll() {
-        return findMany("SELECT * FROM users", userRowMapper);
+        return findMany("SELECT * FROM users ORDER BY user_id ASC", userRowMapper);
     }
 
     @Override
