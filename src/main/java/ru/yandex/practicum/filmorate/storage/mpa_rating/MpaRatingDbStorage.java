@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.storage.mapper.MpaRatingRowMapper;
 import java.util.List;
 
 @Repository
-public class MpaRatingDbStorage extends BaseStorage<MpaRating> implements MpaRatingStorage{
+public class MpaRatingDbStorage extends BaseStorage<MpaRating> implements MpaRatingStorage {
 
     private final MpaRatingRowMapper mpaRatingRowMapper;
 
@@ -38,8 +38,8 @@ public class MpaRatingDbStorage extends BaseStorage<MpaRating> implements MpaRat
     @Override
     public MpaRating getByFilmId(long filmId) {
         String sql = "SELECT m.* FROM films f " +
-                     "JOIN mpa_ratings m ON f.mpa_rating_id = m.mpa_rating_id " +
-                     "WHERE f.film_id = ?";
+                "JOIN mpa_ratings m ON f.mpa_rating_id = m.mpa_rating_id " +
+                "WHERE f.film_id = ?";
         MpaRating rating = findOne(sql, mpaRatingRowMapper, filmId);
         if (rating == null) {
             throw new NotFoundException("Рейтинг для фильма с id: " + filmId + " не найден");
