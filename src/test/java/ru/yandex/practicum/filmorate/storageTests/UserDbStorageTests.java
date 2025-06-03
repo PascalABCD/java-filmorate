@@ -31,10 +31,8 @@ public class UserDbStorageTests {
 
     @BeforeEach
     void setup() {
-        jdbcTemplate.update("DELETE FROM film_likes");
         jdbcTemplate.update("DELETE FROM friends");
         jdbcTemplate.update("DELETE FROM users");
-        jdbcTemplate.update("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
 
         user = new User();
         user.setEmail("user@example.com");
