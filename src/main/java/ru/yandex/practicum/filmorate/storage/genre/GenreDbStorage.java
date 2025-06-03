@@ -27,34 +27,27 @@ public class GenreDbStorage extends BaseStorage<Genre> implements GenreStorage {
     @Override
     public Genre getById(int id) {
         String sql = "SELECT * FROM genres WHERE genre_id = ?";
-        Genre result = findOne(sql, new GenreRowMapper(), id);
-        if (result == null) {
-            throw new NotFoundException("Жанр с id: " + id + " не найден");
-        }
-        return result;
-    }
-
-    public String getNameById(int id) {
-        String sql = "SELECT * FROM genres WHERE genre_id = ?";
         Genre genre = findOne(sql, new GenreRowMapper(), id);
         if (genre == null) {
             throw new NotFoundException("Жанр с id: " + id + " не найден");
         }
-        return genre.getName();
+        return genre;
+    }
+
+    public String getNameById(int id) {
+        return getById(id).getName();
     }
 
     @Override
     public List<Genre> getByFilmId(long id) {
-        String sql = "SELECT genre_id FROM film_genres WHERE film_id = ?";
-        List<Genre> genres = findMany(sql, new GenreRowMapper(), id);
-        List<Integer> genreIds = genres.stream()
-                .map(Genre::getId)
-                .toList();
-        for (Integer genreId : genreIds) {
-            Genre genre = getById(genreId);
-            genres.add(genre);
-        }
-        return genres;
+        String sql = """
+            SELECT g.genre_id, g.genre_name
+            FROM film_genres fg
+            JOIN genres g ON fg.genre_id = g.genre_id
+            WHERE fg.film_id = ?
+            ORDER BY g.genre_id
+        """;
+        return findMany(sql, new GenreRowMapper(), id);
     }
 }
 

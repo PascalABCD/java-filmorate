@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -15,21 +14,16 @@ import ru.yandex.practicum.filmorate.storage.likes.FilmLikesStorage;
 import ru.yandex.practicum.filmorate.storage.mpa_rating.MpaRatingStorage;
 
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @Validated
 @Service
 public class FilmService {
-    @Autowired
     @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
 
-    @Autowired
     private final FilmLikesStorage likesStorage;
-    @Autowired
     private final GenreStorage genreStorage;
-    @Autowired
     private final MpaRatingStorage ratingStorage;
 
     public FilmService(FilmStorage filmStorage, FilmLikesStorage likesStorage, GenreStorage genreStorage, MpaRatingStorage ratingStorage) {
@@ -38,7 +32,6 @@ public class FilmService {
         this.genreStorage = genreStorage;
         this.ratingStorage = ratingStorage;
     }
-
 
     public List<Film> getAll() {
         return filmStorage.getAll();
@@ -51,7 +44,6 @@ public class FilmService {
     public Film create(Film film) {
         MpaRating mpaRating = ratingStorage.getById(film.getMpa().getId());
         film.setMpa(mpaRating);
-        List<Genre> genres = genreStorage.getByFilmId(film.getId());
         film.getGenres().forEach(genre -> {
             Genre existingGenre = genreStorage.getById(genre.getId());
             if (existingGenre != null) {
@@ -64,14 +56,18 @@ public class FilmService {
     }
 
     public Film update(Film film) {
-        if (filmStorage.getById(film.getId()) == null) {
-            throw new NotFoundException("фильм с id " + film.getId() + " не найден");
-        }
+        getFilmById(film.getId());
 
         MpaRating mpaRating = ratingStorage.getById(film.getMpa().getId());
         film.setMpa(mpaRating);
-        Set<Genre> genres = film.getGenres();
-        film.setGenres(genres);
+        film.getGenres().forEach(genre -> {
+            Genre existingGenre = genreStorage.getById(genre.getId());
+            if (existingGenre != null) {
+                genre.setName(existingGenre.getName());
+            } else {
+                throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
+            }
+        });
         return filmStorage.update(film);
     }
 

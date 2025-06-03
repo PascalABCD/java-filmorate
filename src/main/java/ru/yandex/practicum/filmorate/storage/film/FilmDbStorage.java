@@ -6,10 +6,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
-import ru.yandex.practicum.filmorate.storage.likes.FilmLikesDbStorage;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mpa_rating.MpaRatingDbStorage;
 
@@ -21,28 +19,24 @@ import java.util.stream.Collectors;
 public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
     private final MpaRatingDbStorage mpaDb;
     private final GenreDbStorage genreDb;
-    private final FilmLikesDbStorage likesDb;
 
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbc,
                          MpaRatingDbStorage mpaDb,
-                         GenreDbStorage genreDb,
-                         FilmLikesDbStorage likesDb) {
+                         GenreDbStorage genreDb) {
         super(jdbc);
         this.mpaDb = mpaDb;
         this.genreDb = genreDb;
-        this.likesDb = likesDb;
     }
 
     @Override
     public Film create(Film film) {
         film.setMpa(mpaDb.getById(film.getMpa().getId()));
-
         film.getGenres().forEach(
                 genre -> genre.setName(genreDb.getNameById(genre.getId()))
         );
 
-        final long id = insert(
+        long id = insert(
                 "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) VALUES (?, ?, ?, ?, ?)",
                 film.getName(),
                 film.getDescription(),
@@ -83,7 +77,8 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
                 ORDER BY f.film_id
                 """;
         List<Film> films = jdbc.query(sql, new FilmRowMapper());
-        loadGenresForFilms(films);
+        loadGenres(films);
+        loadLikesForFilms(films);
         return films;
     }
 
@@ -96,21 +91,10 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
                 WHERE f.film_id = ?
                 """;
         Film film = findOne(sql, new FilmRowMapper(), id);
-        if (film == null) {
-            throw new NotFoundException("Фильм с id " + id + " не найден");
-        }
+        if (film == null) throw new NotFoundException("Фильм с id " + id + " не найден");
 
-        String genreSql = """
-            SELECT g.genre_id, g.genre_name
-            FROM film_genres fg
-            JOIN genres g ON fg.genre_id = g.genre_id
-            WHERE fg.film_id = ?
-            ORDER BY g.genre_id
-            """;
-        List<Genre> genres = jdbc.query(genreSql, (rs, rowNum) ->
-                new Genre(rs.getInt("genre_id"), rs.getString("genre_name")), id);
-
-        film.setGenres(new LinkedHashSet<>(genres));
+        loadGenres(List.of(film));
+        loadLikesForFilms(List.of(film));
         return film;
     }
 
@@ -126,27 +110,25 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
                             LIMIT ?
                 """;
         List<Film> films = jdbc.query(sql, new FilmRowMapper(), count);
-        loadGenresForFilms(films);
+        loadGenres(films);
         loadLikesForFilms(films);
         return films;
     }
 
-    private void loadGenresForFilms(List<Film> films) {
+    private void loadGenres(List<Film> films) {
         if (films.isEmpty()) return;
 
-        // Собираем все ID фильмов
         List<Long> filmIds = films.stream()
                 .map(Film::getId)
                 .toList();
 
-        // SQL: получаем все жанры для этих фильмов
-        String sql = """
-        SELECT fg.film_id, g.genre_id, g.genre_name
-        FROM film_genres fg
-        JOIN genres g ON fg.genre_id = g.genre_id
-        WHERE fg.film_id IN (%s)
-        ORDER BY g.genre_id
-        """.formatted(filmIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
+        String sql = String.format("""
+                SELECT fg.film_id, g.genre_id, g.genre_name
+                FROM film_genres fg
+                JOIN genres g ON fg.genre_id = g.genre_id
+                WHERE fg.film_id IN (%s)
+                ORDER BY g.genre_id
+                """, filmIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
         Map<Long, Set<Genre>> genresByFilmId = new HashMap<>();
 
@@ -156,34 +138,9 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
             genresByFilmId.computeIfAbsent(filmId, k -> new LinkedHashSet<>()).add(genre);
         });
 
-        // Назначаем жанры каждому фильму
         for (Film film : films) {
             Set<Genre> genres = genresByFilmId.getOrDefault(film.getId(), new LinkedHashSet<>());
             film.setGenres(genres);
-        }
-    }
-
-    private void loadMpaForFilms(List<Film> films) {
-        if (films.isEmpty()) return;
-
-        String sql = """
-        SELECT f.film_id, m.mpa_rating_id, m.mpa_rating_name
-        FROM films f
-        JOIN mpa_ratings m ON f.mpa_rating_id = m.mpa_rating_id
-        WHERE f.film_id IN (%s)
-    """.formatted(films.stream().map(f -> String.valueOf(f.getId())).collect(Collectors.joining(",")));
-
-        Map<Long, MpaRating> mpaByFilmId = new HashMap<>();
-
-        jdbc.query(sql, rs -> {
-            long filmId = rs.getLong("film_id");
-            int mpaId = rs.getInt("mpa_rating_id");
-            String mpaName = rs.getString("mpa_rating_name");
-            mpaByFilmId.put(filmId, new MpaRating(mpaId, mpaName));
-        });
-
-        for (Film film : films) {
-            film.setMpa(mpaByFilmId.get(film.getId()));
         }
     }
 
@@ -192,11 +149,8 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
 
         List<Long> filmIds = films.stream().map(Film::getId).toList();
 
-        String inSql = filmIds.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
-
-        String sql = "SELECT film_id, user_id FROM film_likes WHERE film_id IN (" + inSql + ")";
+        String sql = String.format("SELECT film_id, user_id FROM film_likes WHERE film_id IN (%s)",
+                filmIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
         Map<Long, Set<Long>> likesMap = new HashMap<>();
 
@@ -207,10 +161,10 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
         });
 
         for (Film film : films) {
-            film.setLikes(likesMap.getOrDefault(film.getId(), new HashSet<>()));
+            Set<Long> likes = likesMap.getOrDefault(film.getId(), new HashSet<>());
+            film.setLikes(likes);
         }
     }
-
 }
 
 

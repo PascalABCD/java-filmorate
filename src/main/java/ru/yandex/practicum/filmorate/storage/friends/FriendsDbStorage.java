@@ -17,8 +17,7 @@ public class FriendsDbStorage implements FriendsStorage {
 
     @Override
     public void addFriend(long userId, long friendId) {
-        checkIfExists(userId);
-        checkIfExists(friendId);
+        validateUserIds(userId, friendId);
         checkSameUser(userId, friendId);
 
         String sql = """
@@ -30,15 +29,14 @@ public class FriendsDbStorage implements FriendsStorage {
 
     @Override
     public void removeFriend(long userId, long friendId) {
-        checkIfExists(userId);
-        checkIfExists(friendId);
+        validateUserIds(userId, friendId);
         checkSameUser(userId, friendId);
 
         String sql = """
                 DELETE FROM friends
                 WHERE (user_id = ? AND friend_id = ?)
                 """;
-        int rowsAffected = jdbcTemplate.update(sql, userId, friendId);
+        jdbcTemplate.update(sql, userId, friendId);
     }
 
     @Override
@@ -55,8 +53,7 @@ public class FriendsDbStorage implements FriendsStorage {
 
     @Override
     public List<User> getCommonFriends(long userId, long otherUserId) {
-        checkIfExists(userId);
-        checkIfExists(otherUserId);
+        validateUserIds(userId, otherUserId);
         String sql = """
                     SELECT u.*
                     FROM friends f1
@@ -67,9 +64,17 @@ public class FriendsDbStorage implements FriendsStorage {
         return jdbcTemplate.query(sql, userRowMapper, userId, otherUserId);
     }
 
+    private void validateUserIds(long userId, long friendId) {
+        checkIfExists(userId);
+        checkIfExists(friendId);
+        if (userId == friendId) {
+            throw new IllegalArgumentException("Нельзя добавить себя в друзья.");
+        }
+    }
+
     private void checkIfExists(long userId) {
         String sql = """
-                SELECT *
+                SELECT 1
                 FROM users
                 WHERE user_id = ?
                 """;

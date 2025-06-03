@@ -1,13 +1,13 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.storage.BaseStorage;
+import ru.yandex.practicum.filmorate.storage.mapper.UserRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -15,17 +15,19 @@ import java.util.List;
 import java.util.Objects;
 
 @Repository
-@RequiredArgsConstructor
-public class UserDbStorage implements UserStorage {
-    private final JdbcTemplate jdbcTemplate;
+public class UserDbStorage extends BaseStorage<User> implements UserStorage {
+    private final UserRowMapper userRowMapper;
 
-    private final RowMapper<User> userRowMapper;
+    public UserDbStorage(JdbcTemplate jdbcTemplate, UserRowMapper userRowMapper) {
+        super(jdbcTemplate);
+        this.userRowMapper = userRowMapper;
+    }
 
     @Override
     public User create(User user) {
         String sql = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
+        jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, user.getEmail());
             ps.setString(2, user.getLogin());
@@ -34,15 +36,14 @@ public class UserDbStorage implements UserStorage {
             return ps;
         }, keyHolder);
 
-        Long userId = Objects.requireNonNull(keyHolder.getKey()).longValue();
-        user.setId(userId);
+        user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         return user;
     }
 
     @Override
     public User update(User user) {
         String sql = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
-        int updated = jdbcTemplate.update(
+        int updated = jdbc.update(
                 sql,
                 user.getEmail(),
                 user.getLogin(),
@@ -56,14 +57,16 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getAll() {
-        return jdbcTemplate.query("SELECT * FROM users", userRowMapper);
+        return findMany("SELECT * FROM users", userRowMapper);
     }
 
     @Override
     public User getById(long id) {
         String sql = "SELECT * FROM users WHERE user_id = ?";
-        List<User> users = jdbcTemplate.query(sql, userRowMapper, id);
-        if (users.isEmpty()) throw new NotFoundException("Пользователь не найден");
-        return users.getFirst();
+        User user = findOne(sql, userRowMapper, id);
+        if (user == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+        return user;
     }
 }

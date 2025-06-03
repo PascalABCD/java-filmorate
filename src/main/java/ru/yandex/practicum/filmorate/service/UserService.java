@@ -38,6 +38,7 @@ public class UserService {
     }
 
     public User update(User user) {
+        log.info("Проверяем, что пользователь {} существует ", user);
         getUserById(user.getId());
         checkName(user);
         log.info("Пользователь {} обновлен", user);
@@ -45,8 +46,12 @@ public class UserService {
     }
 
     public void addFriend(Long userId, Long friendId) {
+        log.info("Проверяем, что оба пользователя существуют");
+        getUserById(userId);
+        getUserById(friendId);
+        log.info("Пользователь {} добавляет в друзья пользователя {}", userId, friendId);
         friendsStorage.addFriend(userId, friendId);
-        log.info("Процесс добавления завершен");
+        log.info("Пользователь {} успешно добавил в друзья пользователя {}", userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
