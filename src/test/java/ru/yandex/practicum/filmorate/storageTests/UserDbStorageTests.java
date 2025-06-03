@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storageTests;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,15 +32,17 @@ public class UserDbStorageTests {
 
     @BeforeEach
     void setup() {
-        jdbcTemplate.update("DELETE FROM friends");
-        jdbcTemplate.update("DELETE FROM users");
-        jdbcTemplate.update("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
-
         user = new User();
         user.setEmail("user@example.com");
         user.setLogin("userLogin");
         user.setName("User Name");
         user.setBirthday(LocalDate.of(1990, 1, 1));
+    }
+
+    @AfterEach
+    void clear() {
+        jdbcTemplate.update("DELETE FROM friends");
+        jdbcTemplate.update("DELETE FROM users");
     }
 
     @Test
