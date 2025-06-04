@@ -46,25 +46,35 @@ public class UserService {
     }
 
     public void addFriend(Long userId, Long friendId) {
-        log.info("Проверяем, что оба пользователя существуют");
+        checkSameUser(userId, friendId);
         getUserById(userId);
         getUserById(friendId);
+
         log.info("Пользователь {} добавляет в друзья пользователя {}", userId, friendId);
         friendsStorage.addFriend(userId, friendId);
         log.info("Пользователь {} успешно добавил в друзья пользователя {}", userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
+        checkSameUser(userId, friendId);
+        getUserById(userId);
+        getUserById(friendId);
+
         friendsStorage.removeFriend(userId, friendId);
         log.info("Процесс удаления завершен");
     }
 
     public List<User> getFriends(Long userId) {
+        getUserById(userId);
         log.info("Выводим список друзей пользователя {}", userId);
         return friendsStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
+        checkSameUser(userId, otherId);
+        getUserById(userId);
+        getUserById(otherId);
+
         log.info("Выводим список общих друзей пользователей {} и {}", userId, otherId);
         return friendsStorage.getCommonFriends(userId, otherId);
     }
@@ -73,6 +83,12 @@ public class UserService {
         if (user.getName() == null || user.getName().isBlank()) {
             log.debug("Имя не указано при создании, устанавливаем имя по умолчанию - логин");
             user.setName(user.getLogin());
+        }
+    }
+
+    private void checkSameUser(long userId, long friendId) {
+        if (userId == friendId) {
+            throw new IllegalArgumentException("Нельзя добавить себя в друзья.");
         }
     }
 }

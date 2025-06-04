@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.friends;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.mapper.UserRowMapper;
 
@@ -17,9 +16,6 @@ public class FriendsDbStorage implements FriendsStorage {
 
     @Override
     public void addFriend(long userId, long friendId) {
-        validateUserIds(userId, friendId);
-        checkSameUser(userId, friendId);
-
         String sql = """
                 INSERT INTO friends (user_id, friend_id)
                 VALUES (?, ?)
@@ -29,9 +25,6 @@ public class FriendsDbStorage implements FriendsStorage {
 
     @Override
     public void removeFriend(long userId, long friendId) {
-        validateUserIds(userId, friendId);
-        checkSameUser(userId, friendId);
-
         String sql = """
                 DELETE FROM friends
                 WHERE (user_id = ? AND friend_id = ?)
@@ -41,7 +34,6 @@ public class FriendsDbStorage implements FriendsStorage {
 
     @Override
     public List<User> getFriends(long userId) {
-        checkIfExists(userId);
         String sql = """
                     SELECT u.*
                     FROM friends f
@@ -53,7 +45,6 @@ public class FriendsDbStorage implements FriendsStorage {
 
     @Override
     public List<User> getCommonFriends(long userId, long otherUserId) {
-        validateUserIds(userId, otherUserId);
         String sql = """
                     SELECT u.*
                     FROM friends f1
@@ -62,31 +53,5 @@ public class FriendsDbStorage implements FriendsStorage {
                     WHERE f1.user_id = ? AND f2.user_id = ?
                 """;
         return jdbcTemplate.query(sql, userRowMapper, userId, otherUserId);
-    }
-
-    private void validateUserIds(long userId, long friendId) {
-        checkIfExists(userId);
-        checkIfExists(friendId);
-        if (userId == friendId) {
-            throw new IllegalArgumentException("Нельзя добавить себя в друзья.");
-        }
-    }
-
-    private void checkIfExists(long userId) {
-        String sql = """
-                SELECT *
-                FROM users
-                WHERE user_id = ?
-                """;
-        List<User> user = jdbcTemplate.query(sql, new UserRowMapper(), userId);
-        if (user.size() != 1) {
-            throw new NotFoundException("Пользователь с id: " + userId + " не найден");
-        }
-    }
-
-    private void checkSameUser(long userId, long friendId) {
-        if (userId == friendId) {
-            throw new IllegalArgumentException("Нельзя добавить себя в друзья.");
-        }
     }
 }

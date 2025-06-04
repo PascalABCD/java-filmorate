@@ -20,13 +20,13 @@ public class MpaController {
 
     @GetMapping("/{id}")
     public MpaRating getMpaById(@PathVariable int id) {
-        log.info("[GET] Запрос на получение рейтинга ID: {}", id);
+        log.info("Запрос на получение рейтинга ID: {}", id);
         return mpaService.getById(id);
     }
 
     @GetMapping
     public List<MpaRating> getAllMpa() {
-        log.info("[GET] Запрос на получение всех рейтингов");
+        log.info("Запрос на получение всех рейтингов");
         return mpaService.getAll();
     }
 }

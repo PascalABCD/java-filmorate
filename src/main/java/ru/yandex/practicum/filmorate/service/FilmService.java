@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.likes.FilmLikesStorage;
 import ru.yandex.practicum.filmorate.storage.mpa_rating.MpaRatingStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 
@@ -25,12 +26,18 @@ public class FilmService {
     private final FilmLikesStorage likesStorage;
     private final GenreStorage genreStorage;
     private final MpaRatingStorage ratingStorage;
+    private final UserStorage userStorage;
 
-    public FilmService(FilmStorage filmStorage, FilmLikesStorage likesStorage, GenreStorage genreStorage, MpaRatingStorage ratingStorage) {
+    public FilmService(FilmStorage filmStorage,
+                       FilmLikesStorage likesStorage,
+                       GenreStorage genreStorage,
+                       MpaRatingStorage ratingStorage,
+                       UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.likesStorage = likesStorage;
         this.genreStorage = genreStorage;
         this.ratingStorage = ratingStorage;
+        this.userStorage = userStorage;
     }
 
     public List<Film> getAll() {
@@ -72,10 +79,16 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
+        getFilmById(filmId);
+        userStorage.getById(userId);
+
         likesStorage.addLike(filmId, userId);
     }
 
     public void removeLike(Long filmId, Long userId) {
+        getFilmById(filmId);
+        userStorage.getById(userId);
+
         likesStorage.removeLike(filmId, userId);
     }
 
