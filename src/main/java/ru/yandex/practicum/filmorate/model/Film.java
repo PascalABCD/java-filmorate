@@ -14,25 +14,38 @@ import java.util.Set;
 
 @Data
 public class Film {
-    Long id;
+    private long id;
 
     @NotBlank(message = "Заполните название фильма")
-    String name;
+    private String name;
 
     @Size(max = 200, message = "Максимальная длина описания - 200 символов")
-    String description;
+    private String description;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Past(message = "Дата релиза не может быть в будущем")
     @ReleaseDate
-    LocalDate releaseDate;
+    private LocalDate releaseDate;
 
     @Positive
-    int duration;
+    private int duration;
 
-    Set<Genre> genres;
+    Set<Genre> genres = new HashSet<>();
 
-    MpaRating mpaRating;
+    private MpaRating mpa;
 
     private Set<Long> likes = new HashSet<>();
+
+    public Film(long id, String name, String description, LocalDate releaseDate, int duration, MpaRating mpa) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+        this.mpa = mpa;
+    }
+
+    public void addGenre(Genre genre) {
+        genres.add(genre);
+    }
 }

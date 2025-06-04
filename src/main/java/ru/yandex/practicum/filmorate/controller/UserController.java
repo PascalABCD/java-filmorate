@@ -23,6 +23,12 @@ public class UserController {
         return userService.getAll();
     }
 
+    @GetMapping("/{userId}")
+    public User getUserById(@PathVariable Long userId) {
+        log.info("Получаем юзера с id {}", userId);
+        return userService.getUserById(userId);
+    }
+
     @PostMapping
     public User create(@Valid @RequestBody User user) {
         log.info("Создаем юзера {}", user);
@@ -36,15 +42,15 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/friends/{friendId}")
-    public User addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+    public void addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
         log.info("Добавляем юзера {} в друзья к юзеру {}", friendId, userId);
-        return userService.addFriend(userId, friendId);
+        userService.addFriend(userId, friendId);
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}")
-    public User removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+    public void deleteFriend(@PathVariable Long userId, @PathVariable Long friendId) {
         log.info("Удаляем юзера {} из друзей юзера {}", friendId, userId);
-        return userService.removeFriend(userId, friendId);
+        userService.deleteFriend(userId, friendId);
     }
 
     @GetMapping("/{userId}/friends")
