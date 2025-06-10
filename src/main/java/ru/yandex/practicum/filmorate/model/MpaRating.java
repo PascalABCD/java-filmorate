@@ -6,4 +6,16 @@ import lombok.Data;
 public class MpaRating {
     private int id;
     private String name;
+
+    public MpaRating() {
+    }
+
+    public MpaRating(int id) {
+        this.id = id;
+    }
+
+    public MpaRating(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 }
